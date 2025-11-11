@@ -21,8 +21,9 @@ const JobSeekerDashboard = () => {
   const [savedJobs, setSavedJobs] = useState([]);
   const [tabValue, setTabValue] = useState(0);
 
-  // Wrapped fetchApplications in useCallback
   const fetchApplications = useCallback(async () => {
+    if (!user || !user.id) return; // ✅ prevent null access
+
     try {
       const response = await axios.get('http://localhost:5000/api/jobs');
       const allApplications = response.data.jobs.flatMap(job =>
@@ -34,19 +35,19 @@ const JobSeekerDashboard = () => {
     } catch (error) {
       console.error('Error fetching applications:', error);
     }
-  }, [user.id]);
+  }, [user]);
 
-  //  Wrapped fetchSavedJobs in useCallback too
   const fetchSavedJobs = useCallback(async () => {
-    // Implement saved jobs functionality (placeholder)
+    // Placeholder for saved jobs logic
     setSavedJobs([]);
   }, []);
 
-  //useEffect now depends on both callbacks
   useEffect(() => {
-    fetchApplications();
-    fetchSavedJobs();
-  }, [fetchApplications, fetchSavedJobs]);
+    if (user && user.id) {
+      fetchApplications();
+      fetchSavedJobs();
+    }
+  }, [user, fetchApplications, fetchSavedJobs]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -57,12 +58,23 @@ const JobSeekerDashboard = () => {
     }
   };
 
+  if (!user) {
+    return (
+      <Container maxWidth="md" sx={{ py: 6, textAlign: 'center' }}>
+        <Typography variant="h6" color="text.secondary">
+          Loading your dashboard...
+        </Typography>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Job Seeker Dashboard
       </Typography>
 
+      {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} md={4}>
           <Card>
@@ -105,6 +117,7 @@ const JobSeekerDashboard = () => {
         </Grid>
       </Grid>
 
+      {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
           <Tab label="My Applications" />
@@ -113,6 +126,7 @@ const JobSeekerDashboard = () => {
         </Tabs>
       </Box>
 
+      {/* My Applications */}
       {tabValue === 0 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h5" gutterBottom>My Job Applications</Typography>
@@ -122,11 +136,7 @@ const JobSeekerDashboard = () => {
                 <Typography variant="h6" color="text.secondary">
                   No applications yet
                 </Typography>
-                <Button 
-                  variant="contained" 
-                  sx={{ mt: 2 }}
-                  href="/jobs"
-                >
+                <Button variant="contained" sx={{ mt: 2 }} href="/jobs">
                   Browse Jobs
                 </Button>
               </CardContent>
@@ -146,8 +156,8 @@ const JobSeekerDashboard = () => {
                       </Typography>
                     </Box>
                     <Box sx={{ textAlign: 'right' }}>
-                      <Chip 
-                        label={app.status} 
+                      <Chip
+                        label={app.status}
                         color={getStatusColor(app.status)}
                         sx={{ mb: 1 }}
                       />
@@ -163,6 +173,7 @@ const JobSeekerDashboard = () => {
         </Box>
       )}
 
+      {/* Saved Jobs */}
       {tabValue === 1 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h5" gutterBottom>Saved Jobs</Typography>
@@ -206,6 +217,7 @@ const JobSeekerDashboard = () => {
         </Box>
       )}
 
+      {/* Profile */}
       {tabValue === 2 && (
         <Box sx={{ mt: 3 }}>
           <Typography variant="h5" gutterBottom>My Profile</Typography>
@@ -216,14 +228,6 @@ const JobSeekerDashboard = () => {
                   <Typography variant="h6">Personal Information</Typography>
                   <Typography><strong>Name:</strong> {user.name}</Typography>
                   <Typography><strong>Email:</strong> {user.email}</Typography>
-                  <Typography><strong>Phone:</strong> {user.profile?.phone || 'Not provided'}</Typography>
-                  <Typography><strong>Location:</strong> {user.profile?.address || 'Not provided'}</Typography>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="h6">Professional Information</Typography>
-                  <Typography><strong>Experience:</strong> {user.profile?.experience || 'Not provided'}</Typography>
-                  <Typography><strong>Education:</strong> {user.profile?.education || 'Not provided'}</Typography>
-                  <Typography><strong>Skills:</strong> {user.profile?.skills?.join(', ') || 'Not provided'}</Typography>
                 </Grid>
               </Grid>
               <Button variant="contained" sx={{ mt: 3 }}>

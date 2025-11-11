@@ -8,15 +8,18 @@ import {
   Box,
   TextField,
   FormControl,
-  Chip
+  Chip,
+  Select,
+  MenuItem
 } from '@mui/material';
-import { Search, Business, Person, TrendingUp, Place } from '@mui/icons-material';
+import { Search, Business, Person, TrendingUp, Place, Work } from '@mui/icons-material';
 import axios from 'axios';
 
 const Home = () => {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [location, setLocation] = useState('');
+  const [experience, setExperience] = useState('');
 
   useEffect(() => {
     fetchFeaturedJobs();
@@ -35,7 +38,8 @@ const Home = () => {
     e.preventDefault();
     const params = new URLSearchParams({
       search: searchTerm,
-      location: location
+      location: location,
+      experience: experience
     }).toString();
     window.location.href = `/jobs?${params}`;
   };
@@ -74,7 +78,7 @@ const Home = () => {
 
   return (
     <Box>
-      {/* Enhanced Hero Section with Reduced Space */}
+      {/* Hero Section */}
       <Box
         sx={{
           background: 'linear-gradient(135deg, #0f172a 0%, #1e3a8a 25%, #3730a3 50%, #4338ca 75%, #6366f1 100%)',
@@ -87,20 +91,20 @@ const Home = () => {
       >
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography 
-              variant="h2" 
-              component="h1" 
-              gutterBottom 
-              sx={{ 
+            <Typography
+              variant="h2"
+              component="h1"
+              gutterBottom
+              sx={{
                 fontWeight: 700,
                 fontSize: { xs: '2rem', md: '2.5rem' },
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
               }}
             >
               Find Your Dream{' '}
-              <Box 
-                component="span" 
-                sx={{ 
+              <Box
+                component="span"
+                sx={{
                   background: 'linear-gradient(45deg, #60a5fa, #a78bfa)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
@@ -111,9 +115,9 @@ const Home = () => {
                 Job's
               </Box>
             </Typography>
-            <Typography 
-              variant="h5" 
-              sx={{ 
+            <Typography
+              variant="h5"
+              sx={{
                 mb: 3,
                 opacity: 0.9,
                 fontSize: { xs: '1rem', md: '1.1rem' },
@@ -123,13 +127,13 @@ const Home = () => {
               Discover thousands of job opportunities from top companies worldwide
             </Typography>
           </Box>
-          
-          {/* Enhanced Search Box - Removed extra padding after button */}
-          <Box 
-            component="form" 
-            onSubmit={handleSearch} 
-            sx={{ 
-              maxWidth: 684, 
+
+          {/* Search Section */}
+          <Box
+            component="form"
+            onSubmit={handleSearch}
+            sx={{
+              maxWidth: 908,
               mx: 'auto',
               background: 'rgba(255, 255, 255, 0.95)',
               borderRadius: 3,
@@ -139,8 +143,8 @@ const Home = () => {
               border: '1px solid rgba(255,255,255,0.2)'
             }}
           >
-            <Grid container spacing={2} alignItems="end"> {/* Changed to align="end" */}
-              <Grid item xs={12} md={5}>
+            <Grid container spacing={2} alignItems="end">
+              <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
                   <Typography variant="body2" fontWeight="600" sx={{ mb: 0.5, color: 'text.primary' }}>
                     Job Title or Keyword
@@ -158,14 +162,15 @@ const Home = () => {
                         backgroundColor: 'white',
                         borderRadius: 1.5,
                         '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                        },
-                      },
+                          borderColor: 'primary.main'
+                        }
+                      }
                     }}
                   />
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={5}>
+
+              <Grid item xs={12} md={4}>
                 <FormControl fullWidth>
                   <Typography variant="body2" fontWeight="600" sx={{ mb: 0.5, color: 'text.primary' }}>
                     Location
@@ -183,21 +188,48 @@ const Home = () => {
                         backgroundColor: 'white',
                         borderRadius: 1.5,
                         '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'primary.main',
-                        },
-                      },
+                          borderColor: 'primary.main'
+                        }
+                      }
                     }}
                   />
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={2}>
+
+              <Grid item xs={12} md={3}>
+                <FormControl fullWidth size="small">
+                  <Typography variant="body2" fontWeight="600" sx={{ mb: 0.5, color: 'text.primary' }}>
+                    Experience
+                  </Typography>
+                  <Select
+                    value={experience}
+                    onChange={(e) => setExperience(e.target.value)}
+                    displayEmpty
+                    sx={{
+                      backgroundColor: 'white',
+                      borderRadius: 1.5,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0,0,0,0.23)' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' }
+                    }}
+                    startAdornment={<Work sx={{ mr: 1, color: 'primary.main' }} />}
+                  >
+                    <MenuItem value="">Select experience</MenuItem>
+                    <MenuItem value="0-1 Years">0-1 Years</MenuItem>
+                    <MenuItem value="1-3 Years">1-3 Years</MenuItem>
+                    <MenuItem value="3-5 Years">3-5 Years</MenuItem>
+                    <MenuItem value="5+ Years">5+ Years</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={1}>
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
                   fullWidth
-                  sx={{ 
-                    height: '40px', // Further reduced height
+                  sx={{
+                    height: '40px',
                     borderRadius: 1.5,
                     fontWeight: 600,
                     fontSize: '0.9rem',
@@ -207,8 +239,7 @@ const Home = () => {
                       transform: 'translateY(-1px)',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                     },
-                    transition: 'all 0.3s ease',
-                    mt: 0 // Removed margin top completely
+                    transition: 'all 0.3s ease'
                   }}
                 >
                   SEARCH
@@ -219,11 +250,11 @@ const Home = () => {
         </Container>
       </Box>
 
+      {/* Features Section */}
       <Container maxWidth="lg">
-        {/* Features Section */}
         <Box sx={{ mb: 6 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h2" gutterBottom sx={{ fontWeight: 700, color: 'text.primary' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
               Why Choose JobPortal?
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
@@ -231,24 +262,16 @@ const Home = () => {
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, justifyContent: 'center', alignItems: 'stretch' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2, justifyContent: 'center' }}>
             {features.map((feature, index) => (
-              <Card 
+              <Card
                 key={index}
-                sx={{ 
-                  textAlign: 'center', 
+                sx={{
+                  textAlign: 'center',
                   p: 2,
                   flex: 1,
-                  minWidth: { xs: '100%', md: '220px' },
-                  maxWidth: { xs: '100%', md: '260px' },
                   transition: 'all 0.3s ease-in-out',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.1)'
-                  }
+                  '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 6px 20px rgba(0,0,0,0.1)' }
                 }}
               >
                 <Box>
@@ -262,27 +285,15 @@ const Home = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       mx: 'auto',
-                      mb: 1.5,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'scale(1.03)'
-                      }
+                      mb: 1.5
                     }}
                   >
                     {feature.icon}
                   </Box>
-                  <Typography variant="h6" gutterBottom sx={{ 
-                    fontWeight: 600, 
-                    color: 'text.primary', 
-                    mb: 1,
-                    fontSize: '1rem'
-                  }}>
+                  <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                     {feature.title}
                   </Typography>
-                  <Typography color="text.secondary" sx={{ 
-                    lineHeight: 1.4, 
-                    fontSize: '0.8rem'
-                  }}>
+                  <Typography color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                     {feature.description}
                   </Typography>
                 </Box>
@@ -291,37 +302,30 @@ const Home = () => {
           </Box>
         </Box>
 
-        {/* Featured Jobs Section */}
+        {/* Featured Jobs */}
         <Box sx={{ mb: 6 }}>
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h2" gutterBottom sx={{ fontWeight: 700, color: 'text.primary' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
               Featured Jobs
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
               Hand-picked opportunities from top companies
             </Typography>
           </Box>
-          
+
           <Grid container spacing={2}>
             {featuredJobs.map((job) => (
               <Grid item xs={12} md={6} lg={4} key={job._id}>
-                <Card 
-                  sx={{ 
+                <Card
+                  sx={{
                     p: 2,
                     cursor: 'pointer',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
                     transition: 'all 0.3s ease-in-out',
                     border: '1px solid',
                     borderColor: 'divider',
-                    '&:hover': {
-                      transform: 'translateY(-3px)',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.12)',
-                      borderColor: 'primary.main'
-                    }
+                    '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 6px 20px rgba(0,0,0,0.12)', borderColor: 'primary.main' }
                   }}
-                  onClick={() => window.location.href = `/jobs/${job._id}`}
+                  onClick={() => (window.location.href = `/jobs/${job._id}`)}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'start', mb: 1.5 }}>
                     <Box
@@ -335,79 +339,31 @@ const Home = () => {
                         justifyContent: 'center',
                         color: 'white',
                         fontWeight: 'bold',
-                        fontSize: '1.1rem',
-                        mr: 1.5,
-                        flexShrink: 0
+                        mr: 1.5
                       }}
                     >
                       {job.company?.charAt(0)?.toUpperCase() || 'C'}
                     </Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography 
-                        variant="h6" 
-                        gutterBottom 
-                        sx={{ 
-                          fontWeight: 600, 
-                          lineHeight: 1.2,
-                          color: 'text.primary',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          fontSize: '1rem'
-                        }}
-                      >
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
                         {job.title}
                       </Typography>
-                      <Typography 
-                        color="primary" 
-                        sx={{ 
-                          fontWeight: 500,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          fontSize: '0.9rem'
-                        }}
-                      >
+                      <Typography color="primary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
                         {job.company}
                       </Typography>
                     </Box>
                   </Box>
 
                   <Box sx={{ mb: 1.5 }}>
-                    <Chip 
-                      label={job.jobType} 
-                      color={getJobTypeColor(job.jobType)}
-                      size="small"
-                      sx={{ mr: 1, mb: 1, fontWeight: 500, fontSize: '0.7rem' }}
-                    />
-                    <Chip 
-                      label={job.experience} 
-                      variant="outlined"
-                      size="small"
-                      sx={{ mb: 1, fontWeight: 500, fontSize: '0.7rem' }}
-                    />
+                    <Chip label={job.jobType} color={getJobTypeColor(job.jobType)} size="small" sx={{ mr: 1, mb: 1 }} />
+                    <Chip label={job.experience} variant="outlined" size="small" sx={{ mb: 1 }} />
                   </Box>
 
-                  <Typography 
-                    color="text.secondary" 
-                    sx={{ 
-                      mb: 1.5,
-                      flex: 1,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      lineHeight: 1.4,
-                      fontSize: '0.8rem'
-                    }}
-                  >
+                  <Typography color="text.secondary" sx={{ mb: 1.5, fontSize: '0.8rem' }}>
                     {job.description.substring(0, 100)}...
                   </Typography>
 
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" color="primary" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
                       ${job.salary?.min} - ${job.salary?.max}
                     </Typography>
@@ -422,22 +378,7 @@ const Home = () => {
 
           {featuredJobs.length > 0 && (
             <Box sx={{ textAlign: 'center', mt: 3 }}>
-              <Button 
-                variant="outlined" 
-                size="medium"
-                href="/jobs"
-                sx={{ 
-                  px: 3,
-                  borderRadius: 1.5,
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  '&:hover': {
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 3px 8px rgba(0,0,0,0.12)'
-                  },
-                  transition: 'all 0.3s ease'
-                }}
-              >
+              <Button variant="outlined" href="/jobs" sx={{ px: 3, fontWeight: 600 }}>
                 View All Jobs
               </Button>
             </Box>
