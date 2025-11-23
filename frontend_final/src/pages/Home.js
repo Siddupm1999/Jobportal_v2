@@ -28,9 +28,10 @@ const Home = () => {
   const fetchFeaturedJobs = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/jobs?limit=6');
-      setFeaturedJobs(response.data.jobs);
+      setFeaturedJobs(response.data.jobs || []);
     } catch (error) {
       console.error('Error fetching featured jobs:', error);
+      setFeaturedJobs([]);
     }
   };
 
@@ -53,6 +54,31 @@ const Home = () => {
       'Internship': 'primary'
     };
     return colors[jobType] || 'default';
+  };
+
+  // Safe description truncation
+  const truncateDescription = (description, maxLength = 100) => {
+    if (!description) return 'No description available';
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength) + '...';
+  };
+
+  // Safe salary display
+  const getSalaryText = (job) => {
+    if (!job.salary) return 'Salary not disclosed';
+    if (typeof job.salary === 'object') {
+      if (job.salary.min && job.salary.max) {
+        return `$${job.salary.min} - $${job.salary.max}`;
+      }
+      return 'Salary not disclosed';
+    }
+    return `$${job.salary}`;
+  };
+
+  // Safe company initial
+  const getCompanyInitial = (company) => {
+    if (!company) return 'C';
+    return company.charAt(0).toUpperCase();
   };
 
   const features = [
@@ -342,33 +368,47 @@ const Home = () => {
                         mr: 1.5
                       }}
                     >
-                      {job.company?.charAt(0)?.toUpperCase() || 'C'}
+                      {getCompanyInitial(job.company)}
                     </Box>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem' }}>
-                        {job.title}
+                        {job.title || 'Untitled Position'}
                       </Typography>
                       <Typography color="primary" sx={{ fontWeight: 500, fontSize: '0.9rem' }}>
-                        {job.company}
+                        {job.company || 'Company not specified'}
                       </Typography>
                     </Box>
                   </Box>
 
                   <Box sx={{ mb: 1.5 }}>
-                    <Chip label={job.jobType} color={getJobTypeColor(job.jobType)} size="small" sx={{ mr: 1, mb: 1 }} />
-                    <Chip label={job.experience} variant="outlined" size="small" sx={{ mb: 1 }} />
+                    {job.jobType && (
+                      <Chip 
+                        label={job.jobType} 
+                        color={getJobTypeColor(job.jobType)} 
+                        size="small" 
+                        sx={{ mr: 1, mb: 1 }} 
+                      />
+                    )}
+                    {job.experience && (
+                      <Chip 
+                        label={job.experience} 
+                        variant="outlined" 
+                        size="small" 
+                        sx={{ mb: 1 }} 
+                      />
+                    )}
                   </Box>
 
                   <Typography color="text.secondary" sx={{ mb: 1.5, fontSize: '0.8rem' }}>
-                    {job.description.substring(0, 100)}...
+                    {truncateDescription(job.description)}
                   </Typography>
 
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" color="primary" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                      ${job.salary?.min} - ${job.salary?.max}
+                      {getSalaryText(job)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                      {new Date(job.createdAt).toLocaleDateString()}
+                      {job.createdAt ? new Date(job.createdAt).toLocaleDateString() : 'Recently'}
                     </Typography>
                   </Box>
                 </Card>
@@ -380,6 +420,17 @@ const Home = () => {
             <Box sx={{ textAlign: 'center', mt: 3 }}>
               <Button variant="outlined" href="/jobs" sx={{ px: 3, fontWeight: 600 }}>
                 View All Jobs
+              </Button>
+            </Box>
+          )}
+
+          {featuredJobs.length === 0 && (
+            <Box sx={{ textAlign: 'center', mt: 4 }}>
+              <Typography variant="h6" color="text.secondary">
+                No featured jobs available at the moment
+              </Typography>
+              <Button variant="contained" href="/jobs" sx={{ mt: 2 }}>
+                Browse All Jobs
               </Button>
             </Box>
           )}

@@ -43,6 +43,7 @@ const ForgotPasswordModal = ({ open, onClose }) => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -54,6 +55,8 @@ const ForgotPasswordModal = ({ open, onClose }) => {
   };
 
   const validateForm = () => {
+    console.log('Validating form:', formData); // Debug log
+    
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
       setError('All fields are required');
       return false;
@@ -79,11 +82,17 @@ const ForgotPasswordModal = ({ open, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submitted'); // Debug log
     setError('');
     setSuccess('');
 
-    if (!validateForm()) return;
+    // Validate form
+    if (!validateForm()) {
+      console.log('Form validation failed'); // Debug log
+      return;
+    }
 
+    console.log('Form validation passed, proceeding with API call'); // Debug log
     setLoading(true);
 
     try {
@@ -101,7 +110,6 @@ const ForgotPasswordModal = ({ open, onClose }) => {
         return;
       }
 
-      // Use relative URL - proxy will handle redirecting to backend
       const response = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: {
@@ -206,7 +214,8 @@ const ForgotPasswordModal = ({ open, onClose }) => {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+        {/* Form wrapper with proper structure */}
+        <Box component="form" onSubmit={handleSubmit} id="password-change-form">
           <TextField
             fullWidth
             size="small"
@@ -315,34 +324,35 @@ const ForgotPasswordModal = ({ open, onClose }) => {
               }
             }}
           />
+
+          {/* Move DialogActions INSIDE the form */}
+          <DialogActions sx={{ p: 0, pt: 2, mb: -1 }}>
+            <Button
+              onClick={handleClose}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit" // This is crucial!
+              variant="contained"
+              disabled={loading}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                px: 3
+              }}
+            >
+              {loading ? 'Updating...' : 'Update Password'}
+            </Button>
+          </DialogActions>
         </Box>
       </DialogContent>
-
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          onClick={handleClose}
-          sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading}
-          sx={{
-            borderRadius: 2,
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 3
-          }}
-        >
-          {loading ? 'Updating...' : 'Update Password'}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

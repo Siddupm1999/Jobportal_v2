@@ -1,5 +1,5 @@
-// src/context/AuthContext.js
-import React, { createContext, useState, useContext } from 'react';
+// AuthContext.js
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -14,136 +14,146 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem('token'));
 
-  // Base URL for API - adjust this to match your backend
-  const API_BASE_URL = 'http://localhost:5000/api';
-
-  const register = async (userData) => {
-    try {
-      setLoading(true);
-      console.log('Sending registration request to:', `${API_BASE_URL}/auth/register`);
-      console.log('Registration data:', userData);
-      
-      // Remove confirmPassword before sending to server
-      const { confirmPassword, ...dataToSend } = userData;
-      
-      const response = await axios.post(`${API_BASE_URL}/auth/register`, dataToSend, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      console.log('Registration response:', response.data);
-      
-      if (response.data.success) {
-        const token = response.data.token;
-        const userData = response.data.user;
-        
-        if (token) {
-          localStorage.setItem('token', token);
+  // Set up axios interceptor to include token in all requests
+  useEffect(() => {
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+          config.headers.Authorization = `Bearer ${storedToken}`;
+          console.log('Axios Request - Adding token to headers:', storedToken.substring(0, 20) + '...');
+        } else {
+          console.log('Axios Request - No token found');
         }
-        if (userData) {
-          setUser(userData);
-        }
-        return { 
-          success: true, 
-          user: userData,
-          message: response.data.message || 'Registration successful'
-        };
-      } else {
-        return { 
-          success: false, 
-          message: response.data.message || 'Registration failed' 
-        };
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
       }
-    } catch (error) {
-      console.error('Registration error in AuthContext:', error);
-      const message = error.response?.data?.message || 
-                     error.response?.data?.error || 
-                     error.message || 
-                     'Registration failed';
-      return { success: false, message };
-    } finally {
+    );
+
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+    };
+  }, []);
+
+  // Add response interceptor to handle token errors
+  useEffect(() => {
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('Authentication error - logging out');
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, []);
+
+  // Check if user is logged in on app start
+  useEffect(() => {
+    const checkAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      if (storedToken) {
+        try {
+          setToken(storedToken);
+          const response = await axios.get('http://localhost:5000/api/auth/me', {
+            headers: {
+              Authorization: `Bearer ${storedToken}`
+            }
+          });
+          
+          if (response.data.success) {
+            setUser(response.data.user);
+            console.log('User authenticated on app start:', response.data.user.email);
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          localStorage.removeItem('token');
+          setToken(null);
+        }
+      }
       setLoading(false);
-    }
-  };
+    };
+
+    checkAuth();
+  }, []);
 
   const login = async (email, password) => {
     try {
-      setLoading(true);
-      console.log('Attempting login for:', email);
-      
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        email: email,
-        password: password
+      const response = await axios.post('http://localhost:5000/api/auth/login', {
+        email,
+        password
       });
-      
-      console.log('Login response:', response.data);
-      
+
       if (response.data.success) {
-        const token = response.data.token;
-        const userData = response.data.user;
+        const { user, token } = response.data;
+        localStorage.setItem('token', token);
+        setToken(token);
+        setUser(user);
         
-        if (token) {
-          localStorage.setItem('token', token);
-        }
-        if (userData) {
-          setUser(userData);
-        }
-        
-        // Determine redirect path based on user role
-        const userRole = userData?.role || 'jobseeker';
-        const redirectTo = userRole === 'employer' 
-          ? '/employer/dashboard' 
-          : '/jobseeker/dashboard';
-          
-        return { 
-          success: true, 
-          user: userData,
-          redirectTo: redirectTo,
-          message: response.data.message || 'Login successful'
-        };
-      } else {
-        return { 
-          success: false, 
-          message: response.data.message || 'Login failed' 
-        };
+        console.log('Login successful for user:', user.email);
+        return { success: true, redirectTo: response.data.redirectTo };
       }
     } catch (error) {
-      console.error('Login error in AuthContext:', error);
-      
-      // More specific error handling
-      if (error.response) {
-        // Server responded with error status
-        const message = error.response.data?.message || 
-                       error.response.data?.error || 
-                       `Server error: ${error.response.status}`;
-        return { success: false, message };
-      } else if (error.request) {
-        // Request made but no response received
-        return { success: false, message: 'No response from server. Please check your connection.' };
-      } else {
-        // Something else happened
-        return { success: false, message: error.message || 'Login failed' };
+      console.error('Login error:', error.response?.data || error.message);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Login failed' 
+      };
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/register', userData);
+
+      if (response.data.success) {
+        const { user, token } = response.data;
+        localStorage.setItem('token', token);
+        setToken(token);
+        setUser(user);
+        
+        console.log('Registration successful for user:', user.email);
+        return { success: true };
       }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Registration error:', error.response?.data || error.message);
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Registration failed' 
+      };
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
+    console.log('User logged out');
+  };
+
+  const updateUser = (userData) => {
+    setUser(prevUser => ({ ...prevUser, ...userData }));
   };
 
   const value = {
     user,
-    register,
+    token,
     login,
+    register,
     logout,
-    loading,
-    API_BASE_URL
+    updateUser,
+    setUser, 
+    loading
   };
 
   return (
