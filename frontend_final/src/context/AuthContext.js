@@ -62,6 +62,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('token');
+      console.log('Checking auth, stored token:', storedToken ? 'exists' : 'null');
+      
       if (storedToken) {
         try {
           setToken(storedToken);
@@ -72,14 +74,23 @@ export const AuthProvider = ({ children }) => {
           });
           
           if (response.data.success) {
+            console.log('Auth check successful, user:', response.data.user);
             setUser(response.data.user);
-            console.log('User authenticated on app start:', response.data.user.email);
+          } else {
+            console.log('Auth check failed - no success flag');
+            localStorage.removeItem('token');
+            setToken(null);
+            setUser(null);
           }
         } catch (error) {
-          console.error('Auth check failed:', error);
+          console.error('Auth check failed with error:', error.response?.data || error.message);
           localStorage.removeItem('token');
           setToken(null);
+          setUser(null);
         }
+      } else {
+        console.log('No stored token found');
+        setUser(null);
       }
       setLoading(false);
     };
@@ -145,15 +156,39 @@ export const AuthProvider = ({ children }) => {
     setUser(prevUser => ({ ...prevUser, ...userData }));
   };
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    return !!user && !!token;
+  };
+
+  // Check if user has a specific role
+  const hasRole = (role) => {
+    return user?.role === role;
+  };
+
+  // Check if user is employer
+  const isEmployer = () => {
+    return user?.role === 'employer';
+  };
+
+  // Check if user is job seeker
+  const isJobSeeker = () => {
+    return user?.role === 'jobseeker';
+  };
+
   const value = {
     user,
     token,
+    loading,
     login,
     register,
     logout,
     updateUser,
-    setUser, 
-    loading
+    isAuthenticated,
+    hasRole,
+    isEmployer,
+    isJobSeeker,
+    setUser,
   };
 
   return (
@@ -162,3 +197,5 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

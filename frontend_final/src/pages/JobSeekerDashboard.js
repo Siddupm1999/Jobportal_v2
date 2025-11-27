@@ -727,6 +727,7 @@ const JobSeekerDashboard = () => {
     }
   }, [user?._id]);
 
+  /* ---------- Fetch educations ---------- */
   const fetchEducations = useCallback(async () => {
     if (!user?._id) return;
     try {
@@ -734,6 +735,28 @@ const JobSeekerDashboard = () => {
       setEducations(data.user.educations || []);
     } catch (err) {
       console.error('Failed to fetch educations', err);
+    }
+  }, [user?._id]);
+
+  /* ---------- Fetch IT skills ---------- */
+  const fetchSkills = useCallback(async () => {
+    if (!user?._id) return;
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/users/${user._id}`);
+      setSkillsList(data.user.itSkills || []);
+    } catch (err) {
+      console.error('Failed to fetch IT skills', err);
+    }
+  }, [user?._id]);
+
+  /* ---------- Fetch projects ---------- */
+  const fetchProjects = useCallback(async () => {
+    if (!user?._id) return;
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/users/${user._id}`);
+      setProjects(data.user.projects || []);
+    } catch (err) {
+      console.error('Failed to fetch projects', err);
     }
   }, [user?._id]);
 
@@ -764,6 +787,9 @@ const JobSeekerDashboard = () => {
       fetchSavedJobs();
       fetchEmployments();
       fetchApplications();
+      fetchEducations();
+      fetchSkills();
+      fetchProjects();
       fetchAccomplishments();
       fetchCertifications();
       reset({
@@ -792,6 +818,8 @@ const JobSeekerDashboard = () => {
     fetchSavedJobs,
     fetchEmployments,
     fetchEducations,
+    fetchSkills,
+    fetchProjects,
     fetchAccomplishments,
     fetchCertifications,
     reset,
@@ -1024,56 +1052,6 @@ const JobSeekerDashboard = () => {
     setOpenPersonalDetails(false);
   };
 
-  /* Submit */
-  const onProjectSubmit = async (data) => {
-    try {
-      if (!user?._id) {
-        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
-        return;
-      }
-
-      let response;
-      if (editingProjectId) {
-        response = await axios.put(
-          `http://localhost:5000/api/users/${user._id}/projects/${editingProjectId}`,
-          data
-        );
-      } else {
-        response = await axios.post(
-          `http://localhost:5000/api/users/${user._id}/projects`,
-          data
-        );
-      }
-
-      setUser(response.data.user);
-      setProjects(response.data.user.projects || []);
-
-      enqueueSnackbar(
-        editingProjectId ? 'Project updated!' : 'Project added!',
-        { variant: 'success' }
-      );
-
-      handleProjectClose();
-    } catch (err) {
-      enqueueSnackbar('Failed to save project', { variant: 'error' });
-    }
-  };
-
-  /* Delete */
-  const handleDeleteProject = async (projectId) => {
-    if (!window.confirm('Delete this project?')) return;
-    try {
-      const { data } = await axios.delete(
-        `http://localhost:5000/api/users/${user._id}/projects/${projectId}`
-      );
-      setUser(data.user);
-      setProjects(data.user.projects || []);
-      enqueueSnackbar('Project deleted!', { variant: 'info' });
-    } catch (err) {
-      enqueueSnackbar('Failed to delete project', { variant: 'error' });
-    }
-  };
-
   // ---------- Form submit ----------
   const onSubmit = async (data) => {
     try {
@@ -1198,6 +1176,160 @@ const JobSeekerDashboard = () => {
       enqueueSnackbar('Employment deleted', { variant: 'info' });
     } catch (err) {
       enqueueSnackbar('Failed to delete', { variant: 'error' });
+    }
+  };
+
+  /* ---------- Education submit ---------- */
+  const onEducationSubmit = async (data) => {
+    try {
+      if (!user?._id) {
+        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
+        return;
+      }
+
+      let response;
+      if (editingEduId) {
+        response = await axios.put(
+          `http://localhost:5000/api/users/${user._id}/educations/${editingEduId}`,
+          data
+        );
+      } else {
+        response = await axios.post(
+          `http://localhost:5000/api/users/${user._id}/educations`,
+          data
+        );
+      }
+
+      setUser(response.data.user);
+      setEducations(response.data.user.educations || []);
+
+      enqueueSnackbar(
+        editingEduId ? 'Education updated!' : 'Education added!',
+        { variant: 'success' }
+      );
+
+      handleEducationClose();
+    } catch (err) {
+      enqueueSnackbar('Failed to save education', { variant: 'error' });
+    }
+  };
+
+  /* ---------- Delete education ---------- */
+  const handleDeleteEducation = async (eduId) => {
+    if (!window.confirm('Delete this education record?')) return;
+
+    try {
+      const { data } = await axios.delete(
+        `http://localhost:5000/api/users/${user._id}/educations/${eduId}`
+      );
+
+      setUser(data.user);
+      setEducations(data.user.educations || []);
+      enqueueSnackbar('Education deleted', { variant: 'info' });
+    } catch (err) {
+      enqueueSnackbar('Failed to delete education', { variant: 'error' });
+    }
+  };
+
+  /* ---------- IT Skills submit ---------- */
+  const onSkillSubmit = async (data) => {
+    try {
+      if (!user?._id) {
+        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
+        return;
+      }
+
+      let response;
+      if (editingSkillId) {
+        response = await axios.put(
+          `http://localhost:5000/api/users/${user._id}/skills/${editingSkillId}`,
+          data
+        );
+      } else {
+        response = await axios.post(
+          `http://localhost:5000/api/users/${user._id}/skills`,
+          data
+        );
+      }
+
+      setUser(response.data.user);
+      setSkillsList(response.data.user.itSkills || []);
+
+      enqueueSnackbar(editingSkillId ? 'Skill updated!' : 'Skill added!', {
+        variant: 'success',
+      });
+
+      handleSkillClose();
+    } catch (err) {
+      enqueueSnackbar('Failed to save skill', { variant: 'error' });
+    }
+  };
+
+  /* ---------- Delete IT skill ---------- */
+  const handleDeleteSkill = async (skillId) => {
+    if (!window.confirm('Delete this skill?')) return;
+
+    try {
+      const { data } = await axios.delete(
+        `http://localhost:5000/api/users/${user._id}/skills/${skillId}`
+      );
+
+      setUser(data.user);
+      setSkillsList(data.user.itSkills || []);
+
+      enqueueSnackbar('Skill deleted', { variant: 'info' });
+    } catch (err) {
+      enqueueSnackbar('Failed to delete skill', { variant: 'error' });
+    }
+  };
+
+  /* ---------- Project submit ---------- */
+  const onProjectSubmit = async (data) => {
+    try {
+      if (!user?._id) {
+        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
+        return;
+      }
+
+      let response;
+      if (editingProjectId) {
+        response = await axios.put(
+          `http://localhost:5000/api/users/${user._id}/projects/${editingProjectId}`,
+          data
+        );
+      } else {
+        response = await axios.post(
+          `http://localhost:5000/api/users/${user._id}/projects`,
+          data
+        );
+      }
+
+      setUser(response.data.user);
+      setProjects(response.data.user.projects || []);
+
+      enqueueSnackbar(
+        editingProjectId ? 'Project updated!' : 'Project added!',
+        { variant: 'success' }
+      );
+
+      handleProjectClose();
+    } catch (err) {
+      enqueueSnackbar('Failed to save project', { variant: 'error' });
+    }
+  };
+
+  /* ---------- Delete project ---------- */
+  const handleDeleteProject = async (projectId) => {
+    if (!window.confirm('Delete this project?')) return;
+    try {
+      const { data } = await axios.delete(
+        `http://localhost:5000/api/users/${user._id}/projects/${projectId}`
+      );
+      setUser(data.user);
+      setProjects(data.user.projects || []);
+      enqueueSnackbar('Project deleted!', { variant: 'info' });
+    } catch (err) {
+      enqueueSnackbar('Failed to delete project', { variant: 'error' });
     }
   };
 
@@ -1562,107 +1694,6 @@ const JobSeekerDashboard = () => {
       </Container>
     );
   }
-
-  const onEducationSubmit = async (data) => {
-    try {
-      if (!user?._id) {
-        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
-        return;
-      }
-
-      let response;
-      if (editingEduId) {
-        response = await axios.put(
-          `http://localhost:5000/api/users/${user._id}/educations/${editingEduId}`,
-          data
-        );
-      } else {
-        response = await axios.post(
-          `http://localhost:5000/api/users/${user._id}/educations`,
-          data
-        );
-      }
-
-      setUser(response.data.user);
-      setEducations(response.data.user.educations || []);
-
-      enqueueSnackbar(
-        editingEduId ? 'Education updated!' : 'Education added!',
-        { variant: 'success' }
-      );
-
-      handleEducationClose();
-    } catch (err) {
-      enqueueSnackbar('Failed to save education', { variant: 'error' });
-    }
-  };
-
-  const handleDeleteEducation = async (eduId) => {
-    if (!window.confirm('Delete this education record?')) return;
-
-    try {
-      const { data } = await axios.delete(
-        `http://localhost:5000/api/users/${user._id}/educations/${eduId}`
-      );
-
-      setUser(data.user);
-      setEducations(data.user.educations || []);
-      enqueueSnackbar('Education deleted', { variant: 'info' });
-    } catch (err) {
-      enqueueSnackbar('Failed to delete education', { variant: 'error' });
-    }
-  };
-
-  /* ---------- IT Skills submit ---------- */
-  const onSkillSubmit = async (data) => {
-    try {
-      if (!user?._id) {
-        enqueueSnackbar('User not found. Please login again.', { variant: 'error' });
-        return;
-      }
-
-      let response;
-      if (editingSkillId) {
-        response = await axios.put(
-          `http://localhost:5000/api/users/${user._id}/skills/${editingSkillId}`,
-          data
-        );
-      } else {
-        response = await axios.post(
-          `http://localhost:5000/api/users/${user._id}/skills`,
-          data
-        );
-      }
-
-      setUser(response.data.user);
-      setSkillsList(response.data.user.itSkills || []);
-
-      enqueueSnackbar(editingSkillId ? 'Skill updated!' : 'Skill added!', {
-        variant: 'success',
-      });
-
-      handleSkillClose();
-    } catch (err) {
-      enqueueSnackbar('Failed to save skill', { variant: 'error' });
-    }
-  };
-
-  const handleDeleteSkill = async (skillId) => {
-    if (!window.confirm('Delete this skill?')) return;
-
-    try {
-      const { data } = await axios.delete(
-        `http://localhost:5000/api/users/${user._id}/skills/${skillId}`
-      );
-
-      setUser(data.user);
-      setSkillsList(data.user.itSkills || []);
-
-      enqueueSnackbar('Skill deleted', { variant: 'info' });
-    } catch (err) {
-      enqueueSnackbar('Failed to delete skill', { variant: 'error' });
-    }
-  };
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>

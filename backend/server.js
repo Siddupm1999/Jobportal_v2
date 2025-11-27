@@ -47,6 +47,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/jobs', require('./routes/jobs'));
+app.use('/api/applications', require('./routes/applications'));
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -70,7 +71,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
-      jobs: '/api/jobs'
+      jobs: '/api/jobs',
+      applications: '/api/applications'
     }
   });
 });
@@ -126,7 +128,4 @@ connectDB();
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📁 Uploads directory: ${uploadsDir}`);
-  console.log(`📄 Resumes directory: ${resumesDir}`);
-  console.log(`🌐 API URL: http://localhost:${PORT}/api`);
 });
